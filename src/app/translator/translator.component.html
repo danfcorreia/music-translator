@@ -1,0 +1,201 @@
+<div class="app-shell">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-icon">🎵</span>
+      <span class="header-title">Music Translator</span>
+    </div>
+    <nav class="header-tabs">
+      <a class="tab-link" routerLink="/translator" routerLinkActive="active">Translator</a>
+      <a class="tab-link" routerLink="/harmony" routerLinkActive="active">Harmony</a>
+    </nav>
+    <button class="btn-logout" (click)="logout()">Sign Out</button>
+  </header>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <div class="card">
+
+      <!-- Song Info Row -->
+      <div class="song-info-row">
+        <div class="form-group">
+          <label>Artist</label>
+          <input
+            type="text"
+            [(ngModel)]="artistName"
+            placeholder="Artist name..."
+            class="text-input"
+          />
+        </div>
+        <div class="form-group">
+          <label>Song</label>
+          <input
+            type="text"
+            [(ngModel)]="songName"
+            placeholder="Song title..."
+            class="text-input"
+          />
+        </div>
+      </div>
+
+      <!-- Tone Dropdowns Row -->
+      <div class="tone-row">
+        <div class="tone-group">
+          <label>From Key</label>
+          <select [(ngModel)]="sourceNote" class="note-select">
+            <option *ngFor="let note of notes; let i = index" [value]="note">
+              {{ noteDisplay[i] }}
+            </option>
+          </select>
+        </div>
+
+        <div class="arrow-icon">→</div>
+
+        <div class="tone-group">
+          <label>To Key</label>
+          <select [(ngModel)]="targetNote" class="note-select">
+            <option *ngFor="let note of notes; let i = index" [value]="note">
+              {{ noteDisplay[i] }}
+            </option>
+          </select>
+        </div>
+
+        <div class="semitone-badge" *ngIf="sourceNote !== targetNote">
+          {{ transposer.getSemitones(sourceNote, targetNote) > 6
+              ? transposer.getSemitones(sourceNote, targetNote) - 12
+              : transposer.getSemitones(sourceNote, targetNote) }}
+          semitone(s)
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions-row">
+        <button class="btn-primary" (click)="transpose()">
+          🎼 Transpose
+        </button>
+        <button class="btn-secondary" (click)="openPdfModal()" [disabled]="!inputText.trim()">
+          📄 Export PDF
+        </button>
+        <button class="btn-ghost" (click)="clearAll()" [disabled]="!inputText.trim()">
+          🗑 Clear
+        </button>
+      </div>
+
+      <!-- Import Drop Zone -->
+      <div
+        class="drop-zone"
+        [class.drag-over]="isDragOver"
+        [class.is-importing]="isImporting"
+        [class.import-done]="importSuccess"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="onDropZoneClick(fileInput)"
+      >
+        <input #fileInput type="file" accept=".pdf" hidden (change)="onFileInput($event)" />
+
+        <ng-container *ngIf="!isImporting && !importSuccess">
+          <span class="drop-icon">📂</span>
+          <span class="drop-text">Drop a Music Translator PDF here to import</span>
+          <span class="drop-sub">or click to browse</span>
+        </ng-container>
+
+        <ng-container *ngIf="isImporting">
+          <span class="drop-icon spin">⏳</span>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span>Reading PDF…</span>
+              <span class="progress-pct">{{ importProgress }}%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" [style.width.%]="importProgress"></div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="importSuccess">
+          <span class="drop-icon">✅</span>
+          <span class="drop-text success-text">Song loaded successfully!</span>
+        </ng-container>
+      </div>
+      <div class="import-error" *ngIf="importError">⚠️ {{ importError }}</div>
+
+      <!-- Editors Row -->
+      <div class="editors-row">
+
+        <!-- Original -->
+        <div class="editor-panel">
+          <div class="panel-header">
+            <span class="panel-title">
+              Original
+              <span class="key-tag">{{ getNoteDisplay(sourceNote) }}</span>
+            </span>
+            <span class="ref-hint" title="Wrap sections with .ref (bold) or .it (italic) on separate lines">💡 <code>.ref</code> bold &nbsp;·&nbsp; <code>.it</code> italic</span>
+          </div>
+          <textarea
+            [(ngModel)]="inputText"
+            placeholder="Paste your lyrics with chords here...
+
+Example:
+      D                A             D
+I'm so happy, cause today I found my friends
+
+.ref
+      D           A
+This is the refrain section
+.ref"
+            class="tab-textarea"
+          ></textarea>
+        </div>
+
+        <!-- Transposed -->
+        <div class="editor-panel transposed-panel" *ngIf="showTransposed">
+          <div class="panel-header">
+            <span class="panel-title">
+              Transposed
+              <span class="key-tag accent">{{ getNoteDisplay(targetNote) }}</span>
+            </span>
+            <div class="panel-actions">
+              <button class="btn-copy" (click)="copyTransposed()" title="Copy to clipboard">
+                <span *ngIf="!copySuccess">📋 Copy</span>
+                <span *ngIf="copySuccess">✅ Copied!</span>
+              </button>
+              <button class="btn-close" (click)="closeTransposed()" title="Close">✕</button>
+            </div>
+          </div>
+          <pre class="tab-pre transposed-pre" [innerHTML]="renderHtml(transposedText)"></pre>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- PDF Export Modal -->
+  <div class="modal-backdrop" *ngIf="showPdfModal" (click)="closePdfModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span>📄 Export PDF</span>
+        <button class="btn-close" (click)="closePdfModal()">✕</button>
+      </div>
+      <p class="modal-subtitle">What would you like to include in the PDF?</p>
+      <div class="modal-options">
+        <button class="modal-opt" (click)="exportPdf('original')">
+          <span class="opt-icon">📝</span>
+          <span class="opt-label">Original</span>
+          <span class="opt-desc">{{ getNoteDisplay(sourceNote) }} only</span>
+        </button>
+        <button class="modal-opt" (click)="exportPdf('transposed')" [disabled]="!transposedText">
+          <span class="opt-icon">🎵</span>
+          <span class="opt-label">Transposed</span>
+          <span class="opt-desc">{{ getNoteDisplay(targetNote) }} only</span>
+        </button>
+        <button class="modal-opt" (click)="exportPdf('both')" [disabled]="!transposedText">
+          <span class="opt-icon">📋</span>
+          <span class="opt-label">Both</span>
+          <span class="opt-desc">Original + Transposed</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

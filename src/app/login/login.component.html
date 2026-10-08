@@ -1,0 +1,41 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="brand">
+      <span class="music-icon">🎵</span>
+      <h1>Music Translator</h1>
+      <p>Sign in to transpose your songs</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          [(ngModel)]="username"
+          name="username"
+          placeholder="Enter username"
+          autocomplete="username"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Enter password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+      <button type="submit" class="btn-login">Sign In</button>
+    </form>
+  </div>
+</div>

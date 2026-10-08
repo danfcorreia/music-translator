@@ -1,0 +1,100 @@
+<div class="app-shell">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-icon">🎵</span>
+      <span class="header-title">Music Translator</span>
+    </div>
+    <nav class="header-tabs">
+      <a class="tab-link" routerLink="/translator" routerLinkActive="active">Translator</a>
+      <a class="tab-link" routerLink="/harmony" routerLinkActive="active">Harmony</a>
+    </nav>
+    <button class="btn-logout" (click)="logout()">Sign Out</button>
+  </header>
+
+  <main class="app-main">
+
+    <!-- Harmonic Field Table -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🎼 Harmonic Field — Major &amp; Minor</span>
+        <span class="card-sub">Click a row to highlight · All 12 keys</span>
+        <button class="btn-export" (click)="exportPdf()">📄 Export PDF</button>
+      </div>
+
+      <div class="study-box">
+        <label>Study Box</label>
+        <textarea
+          [(ngModel)]="studyNotes"
+          class="study-textarea"
+          placeholder="Write small harmony studies here..."
+        ></textarea>
+      </div>
+
+      <!-- Major -->
+      <h3 class="section-title">Major (Ionian)</h3>
+      <div class="table-wrap">
+        <table class="harmony-table">
+          <thead>
+            <tr>
+              <th class="key-col">Key</th>
+              <th *ngFor="let d of majorDegrees" class="degree-header">{{ d }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let row of harmonyData"
+              [class.selected]="selectedKey === row.key"
+              (click)="selectKey(row.key)"
+            >
+              <td class="key-cell">{{ row.key }}</td>
+              <td
+                *ngFor="let chord of row.major; let i = index"
+                [class.tonic]="i === 0"
+                [class.dominant]="i === 4"
+                [class.dim-chord]="i === 6"
+              >{{ chord }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Minor -->
+      <h3 class="section-title mt">Minor (Aeolian)</h3>
+      <div class="table-wrap">
+        <table class="harmony-table">
+          <thead>
+            <tr>
+              <th class="key-col">Key</th>
+              <th *ngFor="let d of minorDegrees" class="degree-header">{{ d }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let row of harmonyData"
+              [class.selected]="selectedKey === row.key"
+              (click)="selectKey(row.key)"
+            >
+              <td class="key-cell">{{ row.key }}m</td>
+              <td
+                *ngFor="let chord of row.minor; let i = index"
+                [class.tonic]="i === 0"
+                [class.dominant]="i === 4"
+                [class.dim-chord]="i === 1"
+              >{{ chord }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <span class="leg-item"><span class="leg-dot tonic"></span> Tonic (I)</span>
+        <span class="leg-item"><span class="leg-dot dominant"></span> Dominant (V)</span>
+        <span class="leg-item"><span class="leg-dot dim-chord"></span> Diminished</span>
+        <span class="leg-item"><span class="leg-dot selected-dot"></span> Selected key</span>
+      </div>
+    </div>
+
+  </main>
+</div>
